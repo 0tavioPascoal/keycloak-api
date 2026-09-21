@@ -35,10 +35,10 @@ Arquitetura
 Visão dos componentes
 
 flowchart LR
-C["Cliente<br/>Terminal ou frontend"]
-K["Keycloak<br/>Identity Provider"]
-A["API Spring<br/>Resource Server"]
-D["PostgreSQL<br/>do Keycloak"]
+C["Cliente"]
+K["Keycloak"]
+A["API Spring"]
+D["PostgreSQL do Keycloak"]
 
     C -->|"Login"| K
     K -->|"Access Token JWT"| C
@@ -56,11 +56,11 @@ participant K as Keycloak
 participant A as API Spring
 
     C->>K: Solicita autenticação
-    K-->>C: Retorna Access Token JWT
-    C->>A: Authorization: Bearer token
+    K-->>C: Entrega Access Token
+    C->>A: Authorization Bearer JWT
     A->>A: Valida assinatura, emissor e expiração
-    A->>A: Verifica as roles do usuário
-    A-->>C: Retorna 200, 401 ou 403
+    A->>A: Verifica roles
+    A-->>C: 200, 401 ou 403
 
 Responsabilidades
 
@@ -145,11 +145,18 @@ As credenciais administrativas locais estão definidas no compose.yaml. Elas sã
 Organização utilizada
 
 flowchart TD
-K["Keycloak"] --> M["Realm master<br/>Administração do servidor"]
-K --> R["Realm keycloak-spring<br/>Aplicações e usuários"]
-R --> C["Client spring-api"]
-R --> RO["Roles USER e ADMIN"]
-R --> U["Usuários da aplicação"]
+K["Keycloak"]
+M["Realm master - Administração"]
+R["Realm keycloak-spring"]
+C["Client spring-api"]
+RO["Roles USER e ADMIN"]
+U["Usuários da aplicação"]
+
+    K --> M
+    K --> R
+    R --> C
+    R --> RO
+    R --> U
 
 O realm master administra o servidor. O realm keycloak-spring mantém isolados os clients, usuários e permissões deste projeto.
 
@@ -237,11 +244,11 @@ O Spring consulta a configuração OpenID Connect do realm e obtém automaticame
 Como a API valida o JWT
 
 flowchart TD
-R["Requisição com Bearer Token"] --> E{"Token existe e<br/>tem formato JWT?"}
+R["Requisição com Bearer Token"] --> E{"Token JWT foi enviado?"}
 E -->|"Não"| U["401 Unauthorized"]
 E -->|"Sim"| S{"Assinatura válida?"}
 S -->|"Não"| U
-S -->|"Sim"| I{"Emissor e validade<br/>estão corretos?"}
+S -->|"Sim"| I{"Emissor e validade corretos?"}
 I -->|"Não"| U
 I -->|"Sim"| P["Identidade autenticada"]
 P --> O["Verificação das roles"]
